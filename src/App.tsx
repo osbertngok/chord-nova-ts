@@ -9,7 +9,7 @@ interface CPGContextType {
 
 const CPGContext = createContext<CPGContextType | undefined>(undefined);
 
-const ChordProgressionGeneatorComponent: React.FC = () => {
+const ChordProgressionGeneratorComponent: React.FC = () => {
     const context = useContext(CPGContext);
 
     // Check if context is undefined (for safety)
@@ -104,7 +104,7 @@ const App = () => {
 
     return (
             <CPGContext.Provider value={{chordProgressionManager: cpm}}>
-                <ChordProgressionGeneatorComponent></ChordProgressionGeneatorComponent>
+                <ChordProgressionGeneratorComponent></ChordProgressionGeneratorComponent>
             </CPGContext.Provider>
 )
 };
