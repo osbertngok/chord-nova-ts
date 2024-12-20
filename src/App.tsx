@@ -1,38 +1,25 @@
-import React, { useState } from 'react';
+import { useState, useEffect, createContext, useContext } from 'react';
 import './App.css';
+import init, {ChordProgressionManager} from "./lib/cpg-wasm/cpg_wasm";
 
-export class WASMConfig {
-    numOfSequentialChords: number;
-
-    constructor(numOfSequentialChords: number) {
-        this.numOfSequentialChords = numOfSequentialChords;
-    }
-
-    static fromString(jsonString: string): WASMConfig | null {
-        try {
-            const parsed = JSON.parse(jsonString);
-            if (typeof parsed === 'object' && parsed !== null && typeof parsed.numOfSequentialChords === 'number') {
-                return new WASMConfig(parsed.numOfSequentialChords);
-            }
-            console.error('Parsed object does not match WASMConfig structure');
-            return null;
-        } catch (error) {
-            console.error('Invalid JSON string:', error);
-            return null;
-        }
-    }
+// Chord Progression Generation Context, providing a cached chord progression manager for performant chord progression generation.
+interface CPGContextType {
+    chordProgressionManager: ChordProgressionManager | undefined;
 }
 
-// Placeholder for the WASM function
-const mockWasmFunctionAsync = (input: WASMConfig): Promise<string> => {
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            resolve(`Processed: ${input.numOfSequentialChords}`);
-        }, 2000);
-    });
-};
+const CPGContext = createContext<CPGContextType | undefined>(undefined);
 
-const App = () => {
+const ChordProgressionGeneatorComponent: React.FC = () => {
+    const context = useContext(CPGContext);
+
+    // Check if context is undefined (for safety)
+    if (!context) {
+        throw new Error("CPGComponent must be used within a CPGProvider");
+    }
+
+    const { chordProgressionManager } = context;
+
+
     const [config, setConfig] = useState<string>(JSON.stringify({ numOfSequentialChords: 10 }, null, 2)); // Default value
     const [result, setResult] = useState('');
     const [loading, setLoading] = useState(false);
@@ -53,14 +40,12 @@ const App = () => {
                 return Math.min(oldProgress + 20, 100);
             });
         }, 400);
-        // Parse config
-        const conf : WASMConfig | null = WASMConfig.fromString(config);
-        if (conf === null) {
-            // make a toast? For now just console.log
-            console.log(config + " is not a valid WASM config");
+        if (!chordProgressionManager) {
+            console.error("CPG module is not initialized yet.");
+        } else if (!chordProgressionManager.loadConfig(JSON.parse(config))) {
+            console.error("Cannot load configuration " + config);
         } else {
-            // Call the WASM function
-            const processedResult = await mockWasmFunctionAsync(conf);
+            const processedResult: string = chordProgressionManager.calculateChordProgression(); // TODO: make this async
             setResult(processedResult);
             setLoading(false);
             clearInterval(interval);
@@ -70,7 +55,7 @@ const App = () => {
 
     return (
         <div className="App">
-            <h1>Chord Nova <sub>Alpha</sub></h1>
+            <h1>Chord Nova <sub>α</sub></h1>
             <textarea
                 rows={4}
                 cols={50}
@@ -102,6 +87,26 @@ const App = () => {
             />
         </div>
     );
+};
+
+const App = () => {
+    const [cpm, setCpm] = useState<ChordProgressionManager | undefined>(undefined);
+
+    useEffect(() => {
+        const runWasm = async () => {
+            await init(); // Initialize the WASM module
+            setCpm(new ChordProgressionManager())
+        };
+
+        runWasm();
+    }, []);
+
+
+    return (
+            <CPGContext.Provider value={{chordProgressionManager: cpm}}>
+                <ChordProgressionGeneatorComponent></ChordProgressionGeneatorComponent>
+            </CPGContext.Provider>
+)
 };
 
 export default App;
