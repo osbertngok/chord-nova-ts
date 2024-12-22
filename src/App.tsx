@@ -1,4 +1,4 @@
-import { useState, useEffect, createContext, useContext } from 'react';
+import {useState, useEffect, createContext, useContext} from 'react';
 import './App.css';
 import init, {ChordProgressionManager} from "./lib/cpg-wasm/cpg_wasm";
 
@@ -17,10 +17,26 @@ const ChordProgressionGeneratorComponent: React.FC = () => {
         throw new Error("CPGComponent must be used within a CPGProvider");
     }
 
-    const { chordProgressionManager } = context;
+    const {chordProgressionManager} = context;
 
 
-    const [config, setConfig] = useState<string>(JSON.stringify({ numOfSequentialChords: 10 }, null, 2)); // Default value
+    const [config, setConfig] = useState<string>(JSON.stringify({
+        numOfSequentialChords: 5,
+        minNumOfPitches: 3,
+        maxNumOfPitches: 4,
+        minPitch: 40,
+        maxPitch: 76,
+        minThickness: 0.0,
+        maxThickness: 50.0,
+        minRoot: 0,
+        maxRoot: 11,
+        minGeometryCenter: 0.0,
+        maxGeometryCenter: 70.0,
+        minPitchClassSetSize: 3,
+        maxPitchClassSetSize: 4,
+        minCOFSpan: 0,
+        maxCOFSpan: 12,
+    }, null, 2)); // Default value
     const [result, setResult] = useState('');
     const [loading, setLoading] = useState(false);
     const [progress, setProgress] = useState(0);
@@ -63,12 +79,12 @@ const ChordProgressionGeneratorComponent: React.FC = () => {
                 onChange={(e) => setConfig(e.target.value)}
                 placeholder="Enter your configuration here..."
             />
-            <br />
+            <br/>
             <button onClick={handleGoClick} disabled={loading}>
                 {loading ? 'Processing...' : 'Go'}
             </button>
-            <br />
-            <div style={{ margin: '10px 0', width: '100%', background: '#eee' }}>
+            <br/>
+            <div style={{margin: '10px 0', width: '100%', background: '#eee'}}>
                 <div
                     style={{
                         width: `${progress}%`,
@@ -103,10 +119,10 @@ const App = () => {
 
 
     return (
-            <CPGContext.Provider value={{chordProgressionManager: cpm}}>
-                <ChordProgressionGeneratorComponent></ChordProgressionGeneratorComponent>
-            </CPGContext.Provider>
-)
+        <CPGContext.Provider value={{chordProgressionManager: cpm}}>
+            <ChordProgressionGeneratorComponent></ChordProgressionGeneratorComponent>
+        </CPGContext.Provider>
+    )
 };
 
 export default App;
